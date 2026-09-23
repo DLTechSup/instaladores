@@ -1,4 +1,5 @@
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+try { [Net.ServicePointManager]::SecurityProtocol = 3072 } catch {}
+$wc = New-Object Net.WebClient
 $ProgressPreference = 'SilentlyContinue'
 $base = "https://github.com/DLTechSup/instaladores/releases/download/v1"
 $tmp  = "$env:TEMP\inst"
@@ -23,14 +24,14 @@ foreach ($a in $apps) {
 
   Write-Host "[$i/$($apps.Count)] $($a[0])... " -NoNewline
   try {
-    Invoke-WebRequest "$base/$($a[1])" -OutFile "$tmp\$($a[1])" -UseBasicParsing
+    $wc.DownloadFile("$base/$($a[1])", "$tmp\$($a[1])")
     Start-Process "$tmp\$($a[1])" -ArgumentList $a[2] -Wait
     Write-Host "Concluido" -ForegroundColor Green
   } catch {
-    Write-Host "Falhou" -ForegroundColor Red
+    Write-Host "Falhou: $($_.Exception.Message)" -ForegroundColor Red
   }
 }
 
-Write-Progress -Activity "Instalando programas" -Completed
+Write-Progress -Activity "Instalando programas" -Status "Fim" -Completed
 Remove-Item $tmp -Recurse -Force
 Write-Host "`nTodas as instalacoes finalizadas." -ForegroundColor Cyan
