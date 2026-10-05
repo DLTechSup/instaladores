@@ -15,6 +15,26 @@ $apps = @(
   @("FG TimeSync",          "11.FGTimeSyncSetup_1.0.0.4.exe",         "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART")
 )
 
+Write-Host "`n=== DLTechSup - Instaladores ===" -ForegroundColor Cyan
+for ($n = 0; $n -lt $apps.Count; $n++) {
+  Write-Host ("  [{0}] {1}" -f ($n + 1), $apps[$n][0])
+}
+Write-Host "  [T] Instalar todos"
+Write-Host "  [0] Sair"
+Write-Host "`nDigite os numeros separados por virgula ou espaco (ex: 1,3,5) ou T para todos."
+$sel = Read-Host "Escolha"
+
+if ($sel -match '^\s*(0|s|sair)?\s*$') { Write-Host "Nada selecionado. Saindo."; return }
+
+if ($sel -match '^\s*(t|todos|all)\s*$') {
+  $apps = $apps
+} else {
+  $idx = @($sel -split '[,\s;]+' | Where-Object { $_ -match '^\d+$' } | ForEach-Object { [int]$_ } |
+           Where-Object { $_ -ge 1 -and $_ -le $apps.Count } | Sort-Object -Unique)
+  if ($idx.Count -eq 0) { Write-Host "Selecao invalida." -ForegroundColor Red; return }
+  $apps = @($idx | ForEach-Object { ,$apps[$_ - 1] })
+}
+
 $i = 0
 foreach ($a in $apps) {
   $i++
@@ -34,4 +54,4 @@ foreach ($a in $apps) {
 
 Write-Progress -Activity "Instalando programas" -Status "Fim" -Completed
 Remove-Item $tmp -Recurse -Force
-Write-Host "`nTodas as instalacoes finalizadas." -ForegroundColor Cyan
+Write-Host "`nInstalacoes finalizadas." -ForegroundColor Cyan
