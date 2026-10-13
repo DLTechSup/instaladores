@@ -1,4 +1,11 @@
-try { [Net.ServicePointManager]::SecurityProtocol = 3072 } catch {}
+# TLS 1.2 (3072) e exigido pelo GitHub. No Windows 7 com PowerShell 2.0 (.NET 2.0) isso falha.
+$tlsOk = $true
+try { [Net.ServicePointManager]::SecurityProtocol = 3072 } catch { $tlsOk = $false }
+if (-not $tlsOk) {
+  Write-Host "`nAviso: este PowerShell (v$($PSVersionTable.PSVersion)) nao suporta TLS 1.2; os downloads do GitHub vao falhar." -ForegroundColor Yellow
+  Write-Host "No Windows 7 instale, nesta ordem: Service Pack 1, .NET Framework 4.5.2+ e Windows Management Framework 5.1 (PowerShell 5.1)," -ForegroundColor Yellow
+  Write-Host "e habilite o TLS 1.2 (Microsoft Easy Fix 51044 / KB3140245). Depois execute novamente.`n" -ForegroundColor Yellow
+}
 $wc = New-Object Net.WebClient
 $ProgressPreference = 'SilentlyContinue'
 $base = "https://github.com/DLTechSup/instaladores/releases/download/v1"
@@ -102,6 +109,9 @@ foreach ($a in $apps) {
     Write-Host "Concluido" -ForegroundColor Green
   } catch {
     Write-Host "Falhou: $($_.Exception.Message)" -ForegroundColor Red
+    if ([Environment]::OSVersion.Version -lt [Version]"6.2") {
+      Write-Host "  Dica (Windows 7): verifique se o TLS 1.2 esta habilitado no Windows (KB3140245 / Easy Fix 51044)." -ForegroundColor Yellow
+    }
   }
 }
 
